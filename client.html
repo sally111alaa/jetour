@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Jetour Reception</title>
+
+<style>
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #F3F4F6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  width: 300px;
+  height: 400px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+  text-align: center;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.ticket-logo {
+  width: 120%;
+  height: 150%;
+  border-radius: 15px;
+  margin-bottom: 20px;
+  object-fit: cover;
+}
+
+.ticket-details {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #374151;
+  background: #F9FAFB;
+  padding: 15px;
+  border-radius: 12px;
+  width: 100%;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.ticket-details strong {
+  display: inline-block;
+  width: 100px;
+  color: #1F2937;
+}
+
+.return-btn {
+  margin-top: 20px;
+  padding: 10px 0;
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #6B7280;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.ticket-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  background: #1F2937;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.ticket-btn:hover { background: #2563EB; }
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<!-- Home Screen -->
+<div class="card" id="homeScreen">
+  <h2>Welcome to Jetour Reception</h2>
+  <p>Choose Your Ticket</p>
+
+  <button class="ticket-btn" onclick="selectTicket('A')">Ticket A</button>
+  <button class="ticket-btn" onclick="selectTicket('B')">Ticket B</button>
+  <button class="ticket-btn" onclick="selectTicket('C')">Ticket C</button>
+</div>
+
+<!-- Ticket Card Screen -->
+<div class="card hidden" id="ticketScreen">
+  <img src="WhatsApp Image 2026-02-22 at 9.24.00 PM.jpeg" alt="Logo" class="ticket-logo">
+  <div class="ticket-details" id="ticketInfo"></div>
+  <button class="return-btn" onclick="goHome()">Return to Home Page</button>
+</div>
+
+<script src="client.js"></script>
+</body>
+</html>
