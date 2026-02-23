@@ -1,159 +1,67 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Jetour Service Dashboard</title>
-<style>
-body {
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background: #F3F4F6;
-}
-
-h2 { color: #1F2937; }
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  background: white;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-th, td {
-  border: 1px solid #ddd;
-  padding: 12px;
-  text-align: center;
-}
-
-th {
-  background: #1F2937;
-  color: white;
-}
-
-select {
-  padding: 5px;
-}
-
-.status {
-  font-weight: bold;
-  padding: 5px 10px;
-  border-radius: 6px;
-  color: white;
-}
-
-.ticket-A { background-color: #f6f4f412; color: black; } 
-.ticket-B { background-color: #f6f4f412; color: black; } 
-.ticket-C { background-color: #f6f4f412; color: black; } 
-
-.status-Waiting { background-color: #FACC15; color: black; }
-.status-Received { background-color: #047857; color: white; }
-</style>
-</head>
-<body>
-
-<h2>Jetour Service Dashboard</h2>
-<table>
-  <thead>
-    <tr>
-      <th>Ticket</th>
-      <th>Arrival Time</th>
-      <th>Service Advisor</th>
-      <th>Status</th>
-    </tr>
-  </thead>
-  <tbody id="queueBody"></tbody>
-</table>
-
-<script>
-function saveQueueToFile(queueData, filename) {
-    const blob = new Blob([queueData], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-}
-
 function loadQueue() {
-    const today = new Date().toISOString().split("T")[0];
-    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+  fetch("http://YOUR_SERVER_IP:3000/queue")
+      .then(res => res.json())
+      .then(queue => {
+          const tbody = document.getElementById("queueBody");
+          tbody.innerHTML = "";
 
-    const todayKey = "queue_" + today;
-    const yesterdayKey = "queue_" + yesterday;
+          queue.forEach((client, index) => {
+              const tr = document.createElement("tr");
 
-   
-    const yesterdayQueue = localStorage.getItem(yesterdayKey);
-    if (yesterdayQueue) {
-        saveQueueToFile(yesterdayQueue, `queue_${yesterday}.json`);
-        localStorage.removeItem(yesterdayKey);
-    }
+              // Ticket
+              const tdTicket = document.createElement("td");
+              tdTicket.innerText = client.ticket;
+              tdTicket.className = "ticket-" + client.ticket.charAt(0);
+              tr.appendChild(tdTicket);
 
-   
-    let queue = JSON.parse(localStorage.getItem(todayKey)) || [];
-    const tbody = document.getElementById("queueBody");
-    tbody.innerHTML = "";
+              // Arrival Time
+              const tdArrival = document.createElement("td");
+              tdArrival.innerText = client.arrivalTime || "-";
+              tr.appendChild(tdArrival);
 
-    queue.forEach(client => {
-        const tr = document.createElement("tr");
+              // Service Advisor
+              const tdAdvisor = document.createElement("td");
+              const select = document.createElement("select");
+              ["", "Abd El Salam", "Yadger", "Haytham"].forEach(name => {
+                  const option = document.createElement("option");
+                  option.value = name;
+                  option.text = name;
+                  select.appendChild(option);
+              });
+              select.value = client.serviceAdvisor || "";
+              select.addEventListener("change", () => {
+                  client.serviceAdvisor = select.value;
+                  client.status = select.value !== "" ? "Received" : "Waiting";
 
-        // Ticket
-        const tdTicket = document.createElement("td");
-        tdTicket.innerText = client.ticket;
-        tdTicket.className = "ticket-" + client.ticket.charAt(0);
-        tr.appendChild(tdTicket);
+                  // حدث البيانات على السيرفر
+                  fetch(`http://YOUR_SERVER_IP:3000/queue/${index}`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(client)
+                  }).then(res => res.json())
+                    .then(data => console.log(data.message));
 
-        // Arrival Time
-        const tdArrival = document.createElement("td");
-        if (!client.arrivalTime) {
-            client.arrivalTime = new Date().toLocaleTimeString();
-            localStorage.setItem(todayKey, JSON.stringify(queue));
-        }
-        tdArrival.innerText = client.arrivalTime;
-        tr.appendChild(tdArrival);
+                  renderStatus();
+              });
+              tdAdvisor.appendChild(select);
+              tr.appendChild(tdAdvisor);
 
-        // Service Advisor
-        const tdAdvisor = document.createElement("td");
-        const select = document.createElement("select");
-        ["", "Abd El Salam", "Yadger", "Haytham"].forEach(name => {
-            const option = document.createElement("option");
-            option.value = name;
-            option.text = name;
-            select.appendChild(option);
-        });
-        select.value = client.serviceAdvisor || "";
-        select.addEventListener("change", () => {
-            client.serviceAdvisor = select.value;
-            client.status = select.value !== "" ? "Received" : "Waiting";
-            localStorage.setItem(todayKey, JSON.stringify(queue));
-        });
-        tdAdvisor.appendChild(select);
-        tr.appendChild(tdAdvisor);
+              // Status
+              const tdStatus = document.createElement("td");
+              const spanStatus = document.createElement("span");
+              function renderStatus() {
+                  spanStatus.className = "status status-" + client.status;
+                  spanStatus.innerText = client.status;
+              }
+              renderStatus();
+              tdStatus.appendChild(spanStatus);
+              tr.appendChild(tdStatus);
 
-        // Status
-        const tdStatus = document.createElement("td");
-        const spanStatus = document.createElement("span");
-        function renderStatus() {
-            spanStatus.className = "status status-" + client.status;
-            spanStatus.innerText = client.status;
-        }
-        renderStatus();
-        tdStatus.appendChild(spanStatus);
-        tr.appendChild(tdStatus);
-
-        tbody.appendChild(tr);
-    });
-
-    
-    setInterval(() => {
-        localStorage.setItem(todayKey, JSON.stringify(queue));
-    }, 5000); 
+              tbody.appendChild(tr);
+          });
+      });
 }
 
+// تحديث تلقائي كل 5 ثواني
+setInterval(loadQueue, 5000);
 window.onload = loadQueue;
-</script>
-
-</body>
-</html>
